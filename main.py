@@ -16,7 +16,7 @@ def main():
     start_time = int(time.time())
     activity = {'details': 'Loading game',  # this is what gets modified and sent to Discord via discoIPC
                 'timestamps': {'start': start_time},
-                'assets': {'small_image': ' ', 'small_text': 'yeet', 'large_image': 'logo', 'large_text': 'Risk of Rain 2'},
+                'assets': {'small_image': ' ', 'small_text': 'Risk of Rain 2', 'large_image': 'logo', 'large_text': 'Risk of Rain 2'},
                 'state': 'Not in lobby'}
     client_connected = False
     has_mention_not_running = False
@@ -60,39 +60,43 @@ def main():
             old_details_state = copy.copy((activity['details'], activity['state']))
 
             for line in output_log:
-                if "Loaded scene" in line:
-                    if "title" in line:
+                if 'Loaded scene' in line:
+                    activity = switch_image_mode(activity)
+
+                    if 'title' in line:
                         activity['details'] = "Main menu"
                         activity['state'] = "Not in lobby"
-                    elif "lobby loadSceneMode=Single" in line:
+                    elif 'lobby loadSceneMode=Single' in line:
                         activity['details'] = "In lobby"
                         activity['state'] = "Singleplayer"
-                    elif "crystalworld" in line:
+                    elif 'crystalworld' in line:
                         activity['state'] = "Prismatic Trials"
 
-                    elif "golemplains" in line:
-                        activity['details'] = "Titanic Plains"
-                    elif "blackbeach" in line:
-                        activity['details'] = "Distant Roost"
-                    elif "goolake" in line:
-                        activity['details'] = "Abandoned Aquaduct"
-                    elif "frozenwall" in line:
-                        activity['details'] = "Rallypoint Delta"
-                    elif "dampcavesimple" in line:
-                        activity['details'] = "Abyssal Depths"
-                    elif "mysteryspace" in line:
-                        activity['details'] = "Hidden Realm: A Moment, Fractured"
-                    elif "bazaar" in line:
-                        activity['details'] = "Hidden Realm: Bazaar Between Time"
-                    elif "foggyswamp" in line:
-                        activity['details'] = "Wetland Aspect"
+                    elif 'golemplains' in line:
+                        activity = switch_image_mode(activity, ('golemplains', 'Titanic Plains'))
+                    elif 'blackbeach' in line:
+                        activity = switch_image_mode(activity, ('blackbeach', 'Distant Roost'))
+                    elif 'goolake' in line:
+                        activity = switch_image_mode(activity, ('goolake', 'Abandoned Aquaduct'))
+                    elif 'frozenwall' in line:
+                        activity = switch_image_mode(activity, ('frozenwall', 'Rallypoint Delta'))
+                    elif 'dampcavesimple' in line:
+                        activity = switch_image_mode(activity, ('dampcavesimple', 'Abyssal Depths'))
+                    elif 'mysteryspace' in line:
+                        activity = switch_image_mode(activity, ('mysteryspace', 'Hidden Realm: A Moment, Fractured'))
+                    elif 'bazaar' in line:
+                        activity = switch_image_mode(activity, ('bazaar', 'Hidden Realm: Bazaar Between Time'))
+                    elif 'foggyswamp' in line:
+                        activity = switch_image_mode(activity, ('foggyswamp', 'Wetland Aspect'))
 
-                elif "lobby creation succeeded" in line:
+                elif 'lobby creation succeeded' in line:
                     activity['details'] = "In lobby"
                     activity['state'] = "Multiplayer"
-                elif "Left lobby" in line:
+                    activity = switch_image_mode(activity)
+                elif 'Left lobby' in line:
                     activity['details'] = "Main menu"
                     activity['state'] = "Not in lobby"
+                    activity = switch_image_mode(activity)
 
             if time.time() - start_time < 10:
                 activity['details'] = "Loading game"
@@ -136,6 +140,20 @@ def main():
             client_connected = False
 
         time.sleep(next_delay)
+
+
+def switch_image_mode(temp_activity, stage=()):
+    if stage == ():
+        temp_activity['assets']['small_image'] = ' '
+        temp_activity['assets']['large_image'] = 'logo'
+        temp_activity['assets']['large_text'] = 'Risk of Rain 2'
+    else:
+        temp_activity['assets']['small_image'] = 'icon'
+        temp_activity['assets']['large_image'] = stage[0]
+        temp_activity['assets']['large_text'] = stage[1]
+        temp_activity['details'] = stage[1]
+
+    return temp_activity
 
 
 if __name__ == '__main__':
